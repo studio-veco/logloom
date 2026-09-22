@@ -53,9 +53,12 @@ node logloom/server.mjs 8580
   自分の機械でも入れ替えたいときは `LOGLOOM_KEY_UNLOCK=1` を立ててください。
 - **Claude / Codex**：手元の `claude -p` か `codex exec` を呼ぶだけで、鍵は要りません。
   どちらも利用者自身の契約で動きます。画面の「ほかの操作 → 書かせる係」で切り替えます。
-  **Codex を選ぶと、議題ごとに絵を描かせられます。**画像の API（鍵が要る）は使わず、
-  Codex 自身に SVG を書かせるので、ChatGPT のログインだけで絵が出ます。
-  返ってきた SVG は、`script`・`image`・`href`・`on*` を含むものを弾いてから地図に入れます。
+  **Codex を選ぶと、議題ごとに絵を作らせられます。**Codex に入っている `imagegen` の係が
+  `image_gen` の道具を使うので、**`OPENAI_API_KEY` は要りません**（ChatGPT のログインで動きます）。
+  透明な背景に白一色のピクトグラムを1枚作らせ、96px に縮めてから地図に埋めます。
+  縮めるのは、1024px のままだと1枚 650KB あり、議題が増えるたびに drawio へ渡すものが
+  膨らむからです。埋めたあとは data URI なので、**書き出した `.drawio` を他所で開いても絵が残ります**。
+  1枚あたり60〜90秒かかるので、待たずに先へ進み、できたところで地図に出します。
 - **校正の道具**：`LOGLOOM_GLOSSARY` で場所を指せます。指さなければ logloom の隣を探します。
 
 ## 使うもの
@@ -67,7 +70,7 @@ node logloom/server.mjs 8580
 | 誤字 | 共通辞書（約6,700語） | 手元の校正の道具を直に読み込む。写さない。`LOGLOOM_GLOSSARY` で場所を指せます |
 | 枝分け・印 | Jev（TypeSafe System One） | `TYPESAFE_API_KEY`（画面から入れるか、環境変数） |
 | 見出し・要約 | 手元の `claude -p` か `codex exec` | どちらも利用者自身の契約で動く。こちらの鍵を埋め込まない |
-| 議題の絵 | Codex に SVG を書かせる | 画像の API を使わないので、鍵が要らない |
+| 議題の絵 | Codex の `image_gen` | ChatGPT のログインだけで動く。API キーは要らない |
 
 モデルは `~/.cache/whisper-models/ggml-large-v3-turbo.bin`。
 `LOGLOOM_WHISPER_MODEL` で差し替えられます。
