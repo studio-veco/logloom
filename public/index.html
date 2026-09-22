@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LOGLOOM</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<!--
+  アイコンの型。ここに置いて、使う所からは <use> で呼ぶ。
+  デジタル庁デザインシステムの決めごとに合わせて、**アイコンは必ずラベルと並べる。**
+  アイコンだけで意味を伝えない（色だけで意味を伝えないのと同じ理由）。
+  ラベルと並んでいるアイコンには代替テキストを付けない（aria-hidden="true"）。
+-->
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="i-map" viewBox="0 0 24 24"><rect x="2" y="9" width="7" height="6" rx="1.5"/><rect x="15" y="3" width="7" height="5" rx="1.5"/><rect x="15" y="10" width="7" height="5" rx="1.5"/><rect x="15" y="17" width="7" height="5" rx="1.5"/><path d="M9 12h3m0-6.5V18m0-12.5h3M12 12h3m-3 6h3"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4m-4 0h8"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="5.5" y="5.5" width="13" height="13" rx="2.5"/></symbol>
+  <symbol id="i-new" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m0 0-4.5-4.5M12 15l4.5-4.5M4 17v2.5A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5V17"/></symbol>
+  <symbol id="i-open" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-8.5 8.5M18 14v5.5A1.5 1.5 0 0 1 16.5 21h-11A1.5 1.5 0 0 1 4 19.5v-11A1.5 1.5 0 0 1 5.5 7H11"/></symbol>
+  <symbol id="i-word" viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5zM20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5z"/><path d="M6.5 8h2M6.5 11h2M15.5 8h2m-2 3h2"/></symbol>
+  <symbol id="i-paste" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M8.5 10h7m-7 3.5h7m-7 3.5h4"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M13 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9zM13 3v6h6"/><path d="M9 16v-3m3 4.5v-6m3 4.5v-3"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m4.5 12.5 5 5 10-11"/></symbol>
+  <symbol id="i-task" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9.5h16M8 3v4m8-4v4m-8 8 2 2 4-4"/></symbol>
+  <symbol id="i-issue" viewBox="0 0 24 24"><path d="M12 3.5 21.5 20h-19z"/><path d="M12 10v4m0 3h.01"/></symbol>
+  <symbol id="i-dict" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H19v3H6.5A2.5 2.5 0 0 1 4 20.5zM8 7h7M8 10.5h5"/></symbol>
+  <symbol id="i-jev" viewBox="0 0 24 24"><path d="M12 3v3m0 0a6 6 0 0 0-6 6v1.5A3.5 3.5 0 0 0 9.5 17h5a3.5 3.5 0 0 0 3.5-3.5V12a6 6 0 0 0-6-6ZM9 21h6M9.5 12h5"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M15.5 4.5 19.5 8.5 8 20H4v-4z"/><path d="m13.5 6.5 4 4"/></symbol>
+  <symbol id="i-wave" viewBox="0 0 24 24"><path d="M3 11v2m4-6v10m4-13v16m4-12v8m4-5v2"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H9l-5 4z"/></symbol>
+  <symbol id="i-fix" viewBox="0 0 24 24"><path d="M4 17.5 14.5 7m2-2 3 3-3 3m3-3-3-3M4 17.5V21h3.5L17 11.5"/></symbol>
+  <symbol id="i-device" viewBox="0 0 24 24"><path d="M11 5 6.5 9H3v6h3.5L11 19z"/><path d="M15 9.5a3.5 3.5 0 0 1 0 5M17.5 7a7 7 0 0 1 0 10"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5m0-8.5h.01"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><path d="M5 8.5 12 15l7-6.5"/></symbol>
+  <symbol id="i-draw" viewBox="0 0 24 24"><path d="M4 19.5 8 19l10.5-10.5a2.1 2.1 0 0 0-3-3L5 16z"/><path d="M13.5 6.5l4 4M4 19.5 5 16"/></symbol>
+  <symbol id="i-fit" viewBox="0 0 24 24"><path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9m6 0h3.5A1.5 1.5 0 0 1 20 5.5V9m0 6v3.5a1.5 1.5 0 0 1-1.5 1.5H15m-6 0H5.5A1.5 1.5 0 0 1 4 18.5V15"/></symbol>
+  <symbol id="i-fold" viewBox="0 0 24 24"><path d="M6 14.5 12 9l6 5.5"/></symbol>
+  <symbol id="i-unfold" viewBox="0 0 24 24"><path d="M6 9.5 12 15l6-5.5"/></symbol>
+  <symbol id="i-meet" viewBox="0 0 24 24"><rect x="2.5" y="6" width="13" height="12" rx="2"/><path d="m15.5 11 6-3.5v9l-6-3.5z"/></symbol>
+  <symbol id="i-me" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></symbol>
+  <symbol id="i-them" viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19.5a6 6 0 0 1 12 0"/><path d="M16 6.2a3.2 3.2 0 0 1 0 6M17.5 19.5a6 6 0 0 0-2-4.5"/></symbol>
+</svg>
+
+<header class="bar">
+  <div class="brand">
+    <svg class="i i-lg brand-mark" aria-hidden="true" focusable="false"><use href="#i-map"></use></svg>
+    <span class="brand-name">LOGLOOM</span>
+    <label class="title-field">
+      <span class="sr">会議の名前</span>
+      <input id="title" type="text" value="会議" spellcheck="false" autocomplete="off">
+    </label>
+  </div>
+
+  <div class="controls">
+    <label class="field" id="deviceField">
+      <svg class="i" aria-hidden="true" focusable="false"><use href="#i-device"></use></svg>
+      <span class="field-name">音の入口</span>
+      <select id="device" aria-label="音の入口"></select>
+    </label>
+
+    <label class="check meet-check" id="meetCheck" title="Google Meet や Zoom の相手の声も聞き取ります">
+      <input type="checkbox" id="useSystem" checked>
+      <svg class="i" aria-hidden="true" focusable="false"><use href="#i-meet"></use></svg>
+      <span class="meet-name">会議の音も</span>
+    </label>
+
+    <button id="listen" class="btn btn-filled" title="聞き取りを始める" aria-label="聞き取りを始める">
+      <svg class="i" aria-hidden="true" focusable="false"><use id="listenIcon" href="#i-mic"></use></svg>
+      <span id="listenLabel">聞き取りを始める</span>
+    </button>
+
+    <button id="reset" class="btn btn-outline" title="新しい会議にする" aria-label="新しい会議にする">
+      <svg class="i" aria-hidden="true" focusable="false"><use href="#i-new"></use></svg>
+      <span>新しい会議</span>
+    </button>
+
+    <div class="menu">
+      <button id="moreBtn" class="btn btn-outline" aria-expanded="false" aria-controls="more"
+        title="ほかの操作" aria-label="ほかの操作">
+        <svg class="i" aria-hidden="true" focusable="false"><use href="#i-more"></use></svg>
+        <span>ほか</span>
+      </button>
+      <div id="more" class="menu-body" hidden>
+        <a class="menu-item" href="/api/map.xml?dl=1">
+          <svg class="i" aria-hidden="true" focusable="false"><use href="#i-download"></use></svg>
+          <span>マインドマップを保存する（.drawio）</span>
+        </a>
+        <a class="menu-item" href="/api/minutes.md?dl=1">
+          <svg class="i" aria-hidden="true" focusable="false"><use href="#i-download"></use></svg>
+          <span>議事録を保存する（.md）</span>
+        </a>
+        <button class="menu-item" id="openDrawio">
+          <svg class="i" aria-hidden="true" focusable="false"><use href="#i-open"></use></svg>
+          <span>drawio で開いて整える</span>
+        </button>
+        <button class="menu-item" id="fitBtn">
+          <svg class="i" aria-hidden="true" focusable="false"><use href="#i-fit"></use></svg>
+          <span>全体が見えるところまで引く</span>
+        </button>
+        <button class="menu-item" id="finishBtn">
+          <svg class="i" aria-hidden="true" focusable="false"><use href="#i-check"></use></svg>
+          <span>まだ要約の無い論点をまとめる</span>
+        </button>
+        <hr class="menu-line">
+        <button class="menu-item" id="wordsBtn">
+          <svg class="i" aria-hidden="true" focusable="false"><use href="#i-word"></use></svg>
+          <span>この会議の語を足す</span>
+        </button>
+        <button class="menu-item" id="pasteBtn">
+          <svg class="i" aria-hidden="true" focusable="false"><use href="#i-paste"></use></svg>
+          <span>文字を貼って試す</span>
+        </button>
+        <button class="menu-item" id="fileBtn">
+          <svg class="i" aria-hidden="true" focusable="false"><use href="#i-file"></use></svg>
+          <span>録ってある音を聞き取る</span>
+        </button>
+        <hr class="menu-line">
+        <button class="menu-item" id="keyBtn">
+          <svg class="i" aria-hidden="true" focusable="false"><use href="#i-jev"></use></svg>
+          <span>Jev の鍵を入れる</span>
+        </button>
+        <div id="narrowSlot"></div>
+        <label class="menu-item switch-item">
+          <svg class="i" aria-hidden="true" focusable="false"><use href="#i-pen"></use></svg>
+          <span>見出しと要約を書かせる</span>
+          <input type="checkbox" id="useAi" checked>
+        </label>
+        <label class="menu-item switch-item" id="engineRow">
+          <svg class="i" aria-hidden="true" focusable="false"><use href="#i-jev"></use></svg>
+          <span>書かせる係</span>
+          <select id="engine" aria-label="見出しと要約を書かせる係">
+            <option value="claude">Claude</option>
+            <option value="codex">Codex</option>
+          </select>
+        </label>
+        <label class="menu-item switch-item" id="drawRow" hidden>
+          <svg class="i" aria-hidden="true" focusable="false"><use href="#i-draw"></use></svg>
+          <span>議題に絵を描かせる（Codex）</span>
+          <input type="checkbox" id="useDraw">
+        </label>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="chips" id="chips" aria-live="polite"></div>
+
+<main>
+  <section class="map">
+    <!-- src は app.js が入れる。**先に drawio の覚え書きを整えるため**
+         （「drawio で開いて整える」を一度使うと、図形の棚と書式の欄が開いたまま覚えられる） -->
+    <iframe id="map" title="マインドマップ"
+      data-src="/drawio/index.html?embed=1&proto=json&spin=1&libraries=0&noSaveBtn=1&noExitBtn=1&saveAndExit=0&offline=1&lang=ja&ui=min&dark=0&grid=0&pv=0&math=0"></iframe>
+    <p id="mapWait" class="wait">
+      <svg class="i i-lg" aria-hidden="true" focusable="false"><use href="#i-map"></use></svg>
+      マインドマップを読み込んでいます
+    </p>
+  </section>
+
+  <aside class="side">
+    <div class="side-head">
+      <h2>
+        <svg class="i" aria-hidden="true" focusable="false"><use href="#i-chat"></use></svg>
+        書き起こし
+      </h2>
+      <div class="side-tools">
+        <label class="check">
+          <input type="checkbox" id="showFixes" checked>
+          <span>直した語を見せる</span>
+        </label>
+        <button id="foldBtn" class="icon-btn" title="書き起こしを畳んで、マインドマップを大きくする"
+          aria-label="書き起こしを畳んで、マインドマップを大きくする" aria-expanded="true">
+          <svg class="i" aria-hidden="true" focusable="false"><use id="foldIcon" href="#i-fold"></use></svg>
+        </button>
+      </div>
+    </div>
+    <ol id="log" class="log"></ol>
+    <p id="logEmpty" class="empty">
+      <svg class="i i-lg" aria-hidden="true" focusable="false"><use href="#i-mic"></use></svg>
+      聞き取りを始めると、ここに発言が並びます
+    </p>
+    <div id="perm" class="perm" hidden>
+      <svg class="i" aria-hidden="true" focusable="false"><use href="#i-issue"></use></svg>
+      <span>会議の音（Meet・Zoom の相手の声）を拾うには、このアプリに「画面収録」の許可が要ります。</span>
+      <button id="permBtn" class="btn btn-outline">
+        <svg class="i" aria-hidden="true" focusable="false"><use href="#i-open"></use></svg>
+        <span>設定を開く</span>
+      </button>
+    </div>
+    <div class="meter" aria-hidden="true"><div id="level"></div></div>
+    <ul id="notes" class="notes"></ul>
+  </aside>
+</main>
+
+<dialog id="keyDlg" aria-labelledby="keyTitle">
+  <form method="dialog">
+    <h2 id="keyTitle">
+      <svg class="i" aria-hidden="true" focusable="false"><use href="#i-jev"></use></svg>
+      Jev の鍵を入れる
+    </h2>
+    <p>枝分けと、決まったこと・やること・残った課題の印に使います。
+      <b>鍵はこの機械の中（logloom/.env）にだけ保存します。</b>
+      <a href="https://typesafe.ai" target="_blank" rel="noreferrer">typesafe.ai</a> で取れます。
+      入れなくても、枝は発言の数で切って動きます。</p>
+    <div id="keyForm">
+      <input id="keyText" type="password" autocomplete="off" spellcheck="false" placeholder="apikey-…">
+    </div>
+    <p id="keyLocked" class="locked" hidden>
+      <svg class="i" aria-hidden="true" focusable="false"><use href="#i-check"></use></svg>
+      この機械では鍵が決めてあるので、画面からは変えられません。
+      変えるときは、鍵を置いてある所を直してください。
+    </p>
+    <p id="keyNow" class="now"></p>
+    <menu>
+      <button value="cancel" class="btn btn-text">閉じる</button>
+      <button value="ok" class="btn btn-filled">
+        <svg class="i" aria-hidden="true" focusable="false"><use href="#i-check"></use></svg>
+        <span>確かめて保存</span>
+      </button>
+    </menu>
+  </form>
+</dialog>
+
+<dialog id="wordsDlg" aria-labelledby="wordsTitle">
+  <form method="dialog">
+    <h2 id="wordsTitle">
+      <svg class="i" aria-hidden="true" focusable="false"><use href="#i-word"></use></svg>
+      この会議の語を足す
+    </h2>
+    <p>人名・社名・商品名は辞書にありません。ここに入れておくと、聞き取りがその綴りを選びます。
+      読点か改行で区切ってください。<b>始める前に入れるほど効きます。</b></p>
+    <textarea id="wordsText" rows="4" placeholder="設計案、小間、山田、鈴木、ハコノワ"></textarea>
+    <p id="wordsNow" class="now"></p>
+    <menu>
+      <button value="cancel" class="btn btn-text">やめる</button>
+      <button value="ok" class="btn btn-filled">
+        <svg class="i" aria-hidden="true" focusable="false"><use href="#i-check"></use></svg>
+        <span>足す</span>
+      </button>
+    </menu>
+  </form>
+</dialog>
+
+<dialog id="pasteDlg" aria-labelledby="pasteTitle">
+  <form method="dialog">
+    <h2 id="pasteTitle">
+      <svg class="i" aria-hidden="true" focusable="false"><use href="#i-paste"></use></svg>
+      文字を貼って試す
+    </h2>
+    <p>1行が1つの発言です。マイクが無くても、枝分けと要約の様子を確かめられます。</p>
+    <textarea id="pasteText" rows="8" placeholder="では、来月の展示会の話をします。&#10;ブースは3小間で、予算は120万円で通りました。"></textarea>
+    <menu>
+      <button value="cancel" class="btn btn-text">やめる</button>
+      <button value="ok" class="btn btn-filled">
+        <svg class="i" aria-hidden="true" focusable="false"><use href="#i-check"></use></svg>
+        <span>マインドマップに入れる</span>
+      </button>
+    </menu>
+  </form>
+</dialog>
+
+<dialog id="fileDlg" aria-labelledby="fileTitle">
+  <form method="dialog">
+    <h2 id="fileTitle">
+      <svg class="i" aria-hidden="true" focusable="false"><use href="#i-file"></use></svg>
+      録ってある音を聞き取る
+    </h2>
+    <p>手元のファイルの場所を書いてください。m4a・mp3・mp4・wav を受けます。
+      黙った所で切ってから、1つずつ聞き取ります。</p>
+    <input id="filePath" type="text" placeholder="/Users/you/Desktop/会議.m4a">
+    <menu>
+      <button value="cancel" class="btn btn-text">やめる</button>
+      <button value="ok" class="btn btn-filled">
+        <svg class="i" aria-hidden="true" focusable="false"><use href="#i-check"></use></svg>
+        <span>聞き取りを始める</span>
+      </button>
+    </menu>
+  </form>
+</dialog>
+
+<script src="/app.js"></script>
+</body>
+</html>

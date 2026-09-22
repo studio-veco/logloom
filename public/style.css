@@ -1,0 +1,466 @@
+/* デジタル庁デザインシステム（β版 v2.18.0）に合わせる。
+   色は公式のデザイントークン @digital-go-jp/design-tokens v2.0.1 の値をそのまま使う。
+   本体（design.digital.go.jp）で実測した決めごと：
+     ・ボタンは角丸 8px・16px・太字700・塗りは #0017c1／白、輪郭は白／#0017c1 の 1px
+     ・押せるものの当たり判定は 44 CSS px 以上
+     ・フォーカスは Yellow-300 と黒の二重。いかなる場合も変えない
+     ・アイコンは必ずラベルと並べる。色だけ・アイコンだけで意味を伝えない */
+
+:root {
+  /* プリミティブ（公式トークンの値） */
+  --blue-50: #e8f1fe;
+  --blue-100: #d9e6ff;
+  --blue-200: #c5d7fb;
+  --blue-900: #0017c1;
+  --blue-1000: #00118f;
+  --blue-1100: #000071;
+  --green-50: #e6f5ec;
+  --green-100: #c2e5d1;
+  --green-800: #197a4b;
+  --green-1000: #0c472a;
+  --red-50: #fdeeee;
+  --red-100: #ffdada;
+  --red-800: #ec0000;
+  --red-900: #ce0000;
+  --red-1000: #a90000;
+  --yellow-300: #ffd43d;
+  --yellow-900: #927200;
+  --magenta-50: #f3e5f4;
+  --magenta-900: #8b008b;
+  --gray-50: #f2f2f2;
+  --gray-100: #e6e6e6;
+  --gray-200: #cccccc;
+  --gray-300: #b3b3b3;
+  --gray-536: #767676;
+  --gray-600: #666666;
+  --gray-700: #4d4d4d;
+  --gray-900: #1a1a1a;
+  --white: #ffffff;
+  --black: #000000;
+
+  /* 役割 */
+  --primary: var(--blue-900);
+  --primary-hover: var(--blue-1000);
+  --primary-active: var(--blue-1100);
+  --ink: var(--gray-900);
+  --ink-sub: var(--gray-600);
+  --line: var(--gray-200);
+  --line-soft: var(--gray-100);
+  --surface: var(--gray-50);
+
+  --font: "Noto Sans JP", -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
+  --radius: 8px;
+  --elevation-2: 0 2px 12px 2px rgba(0, 0, 0, .1), 0 1px 6px 0 rgba(0, 0, 0, .3);
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; margin: 0; }
+
+body {
+  font-family: var(--font);
+  color: var(--ink);
+  background: var(--white);
+  font-size: 14px;
+  line-height: 1.7;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 読み上げにだけ渡す文字 */
+.sr {
+  position: absolute; width: 1px; height: 1px;
+  margin: -1px; padding: 0; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
+}
+
+/* フォーカスは Yellow-300 と黒の二重。**変えない** */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--yellow-300);
+  outline-offset: 0;
+  box-shadow: 0 0 0 5px var(--black);
+  border-radius: 4px;
+}
+
+/* ---- アイコン ---- */
+
+.sprite { display: none; }
+
+.i {
+  width: 18px; height: 18px; flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.i-lg { width: 24px; height: 24px; }
+
+/* ---- 上の帯 ---- */
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--white);
+  flex: none;
+  flex-wrap: nowrap;          /* **折り返さない。**畳む順は下の決めごとで持つ */
+}
+
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 auto; }
+.brand-mark { color: var(--primary); stroke-width: 1.6; }
+.brand-name {
+  font-size: 13px; font-weight: 700; color: var(--ink-sub);
+  white-space: nowrap;
+}
+
+.title-field { display: block; min-width: 0; flex: 1 1 auto; }
+#title {
+  font-family: var(--font);
+  font-size: 16px; font-weight: 700; color: var(--ink);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  padding: 4px 8px;
+  width: 100%; min-width: 0; max-width: 340px;
+}
+#title:hover { background: var(--surface); }
+#title:focus { background: var(--white); border-color: var(--primary); }
+
+.controls { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+
+.field {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--ink-sub);
+}
+.field .i { color: var(--gray-536); }
+
+select, input[type=text], textarea {
+  font-family: var(--font);
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--white);
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  padding: 7px 8px;
+  min-height: 36px;
+  max-width: 220px;
+}
+select:hover, input[type=text]:hover, textarea:hover { border-color: var(--gray-600); }
+
+/* ---- ボタン（塗り・輪郭・文字） ---- */
+
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font);
+  font-size: 14px; font-weight: 700;
+  border-radius: var(--radius);
+  padding: 9px 14px;
+  min-height: 40px;
+  cursor: pointer;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  background: var(--white);
+  color: var(--ink);
+}
+.btn:disabled { opacity: .5; cursor: default; }
+
+.btn-filled { background: var(--primary); border-color: var(--primary); color: var(--white); }
+.btn-filled:hover:not(:disabled) { background: var(--primary-hover); border-color: var(--primary-hover); }
+.btn-filled:active { background: var(--primary-active); border-color: var(--primary-active); }
+
+.btn-outline { background: var(--white); border-color: var(--primary); color: var(--primary); }
+.btn-outline:hover:not(:disabled) { background: var(--blue-50); }
+
+.btn-text { background: transparent; color: var(--primary); text-decoration: underline; }
+.btn-text:hover { background: var(--blue-50); }
+
+/* 聞き取り中は止めるボタン。**色だけでなく、字とアイコンも変える** */
+.btn-filled.on { background: var(--red-900); border-color: var(--red-900); }
+.btn-filled.on:hover:not(:disabled) { background: var(--red-1000); border-color: var(--red-1000); }
+
+/* ---- ほかの操作（メニュー） ---- */
+
+.menu { position: relative; }
+.menu-body {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 20;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--elevation-2);
+  min-width: 290px; padding: 6px;
+}
+.menu-line { border: 0; border-top: 1px solid var(--line-soft); margin: 6px 4px; }
+.menu-item {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; text-align: left;
+  font-family: var(--font); font-size: 14px; color: var(--ink);
+  background: none; border: 0; border-radius: 6px;
+  padding: 10px; min-height: 44px; cursor: pointer;
+  text-decoration: none;
+}
+.menu-item:hover { background: var(--surface); }
+/* 手で動かしたあと、追いかけが止まっていることを示す */
+.menu-item.on { background: var(--blue-50); color: var(--primary-hover); font-weight: 700; }
+.menu-item .i { color: var(--primary); }
+.switch-item { justify-content: space-between; }
+.switch-item span { flex: 1; }
+.switch-item input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--primary); }
+.switch-item select { max-width: 120px; min-height: 32px; padding: 4px 6px; }
+.switch-item[hidden] { display: none; }
+
+/* ---- 状態の札（チップラベル） ---- */
+/* 決めごと：色だけで意味を伝えない。必ず字で状態を書く。色は使いすぎない */
+
+.chips {
+  display: flex; flex-wrap: wrap; gap: 4px;
+  padding: 5px 16px;
+  border-bottom: 1px solid var(--line-soft);
+  background: var(--surface);
+  flex: none;
+}
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; line-height: 1.45;
+  border: 1px solid var(--line);
+  background: var(--white);
+  border-radius: 999px;
+  padding: 2px 8px 2px 6px;
+  color: var(--gray-700);
+  white-space: nowrap;
+}
+.chip .i { width: 13px; height: 13px; stroke-width: 2; color: var(--gray-536); }
+.chip b { color: var(--ink); font-weight: 700; }
+.chip.ok { border-color: var(--green-100); background: var(--green-50); color: var(--green-1000); }
+.chip.ok .i { color: var(--green-800); }
+.chip.ng { border-color: var(--red-100); background: var(--red-50); color: var(--red-1000); }
+.chip.ng .i { color: var(--red-900); }
+.chip.work { border-color: var(--blue-200); background: var(--blue-50); color: var(--primary-hover); }
+.chip.work .i { color: var(--primary); }
+
+/* ---- 本体 ---- */
+
+main { flex: 1; display: flex; min-height: 0; }
+
+.map { flex: 1; position: relative; min-width: 0; background: var(--white); }
+.map iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+.wait, .empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px; margin: 0;
+  color: var(--ink-sub); font-size: 13px; text-align: center;
+}
+.wait { position: absolute; inset: 0; background: var(--white); }
+.wait .i, .empty .i { color: var(--gray-300); }
+.wait[hidden], .empty[hidden] { display: none; }
+.empty { flex: 1; padding: 24px; }
+
+.side {
+  width: 390px; flex: none;
+  border-left: 1px solid var(--line);
+  display: flex; flex-direction: column; min-height: 0;
+  background: var(--white);
+}
+
+.side-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; padding: 6px 8px 6px 14px; border-bottom: 1px solid var(--line-soft);
+  flex: none;
+}
+.side-tools { display: flex; align-items: center; gap: 6px; }
+
+/* 絵だけのボタン。当たり判定は 44px を取る（デザインシステムの決めごと） */
+.icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; padding: 0;
+  border: 1px solid transparent; border-radius: 6px;
+  background: none; color: var(--gray-700); cursor: pointer;
+  position: relative;
+}
+.icon-btn::after { content: ''; position: absolute; inset: -6px; }
+.icon-btn:hover { background: var(--surface); }
+
+/* 畳んだとき。**書き起こしは見出しだけ残す。**
+   丸ごと消すと、開き直すボタンまで消えてしまう */
+.folded .log, .folded .empty, .folded .notes, .folded .meter { display: none; }
+.folded .side { height: auto; min-height: 0; flex: none; }
+.side-head h2 {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; margin: 0; font-weight: 700;
+}
+.side-head h2 .i { color: var(--gray-536); }
+
+.check { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-sub); cursor: pointer; }
+.check input { width: 16px; height: 16px; accent-color: var(--primary); }
+
+.log {
+  flex: 1; overflow-y: auto; margin: 0;
+  padding: 4px 14px 16px; list-style: none;
+}
+.log[hidden] { display: none; }
+.log li { padding: 9px 0; border-bottom: 1px solid var(--line-soft); }
+.log .t {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; color: var(--gray-536); font-variant-numeric: tabular-nums;
+}
+.log .t .i { width: 13px; height: 13px; }
+.log .text { margin-top: 3px; }
+.log .tags { margin-top: 5px; display: flex; flex-wrap: wrap; gap: 5px; }
+
+/* 決まったこと・やること・残った課題。**字とアイコンの両方で示す** */
+.tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; border-radius: 4px; padding: 2px 7px; border: 1px solid;
+}
+.tag .i { width: 13px; height: 13px; stroke-width: 2; }
+.tag.dec { color: var(--green-1000); border-color: var(--green-100); background: var(--green-50); }
+.tag.act { color: var(--primary-hover); border-color: var(--blue-200); background: var(--blue-50); }
+.tag.iss { color: var(--red-1000); border-color: var(--red-100); background: var(--red-50); }
+/* 誰の声か。マイク＝自分、この Mac の音＝会議の相手 */
+.tag.me { color: var(--gray-700); border-color: var(--gray-200); background: var(--gray-50); }
+.tag.them { color: var(--magenta-900); border-color: var(--magenta-50); background: var(--magenta-50); }
+
+.meet-check {
+  border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 8px 10px; min-height: 40px; font-size: 13px; color: var(--ink);
+}
+.meet-check:hover { background: var(--surface); }
+.meet-check .i { color: var(--primary); }
+
+.fix {
+  display: inline-flex; align-items: center; gap: 5px; flex-wrap: wrap;
+  font-size: 11px; color: var(--gray-700); margin-top: 4px;
+  background: var(--surface); border-radius: 4px; padding: 3px 8px;
+}
+.fix .i { width: 13px; height: 13px; color: var(--gray-536); }
+.fix s { color: var(--red-1000); text-decoration-thickness: 1px; }
+.fix b { color: var(--green-1000); }
+.fix .by { color: var(--gray-536); }
+.hide-fixes .fix { display: none; }
+
+.perm {
+  display: flex; align-items: center; gap: 8px; flex: none;
+  padding: 10px 14px; font-size: 12px; line-height: 1.6;
+  background: var(--red-50); border-top: 1px solid var(--red-100); color: var(--red-1000);
+}
+.perm[hidden] { display: none; }
+.perm > span { flex: 1; }
+.perm .i { color: var(--red-900); }
+.perm .btn { font-size: 12px; padding: 6px 10px; min-height: 34px; }
+
+.meter {
+  height: 4px; position: relative; background: var(--line-soft);
+  border-top: 1px solid var(--line-soft); flex: none;
+}
+#level { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--primary); transition: width .1s linear; }
+
+.notes {
+  flex: none; max-height: 116px; overflow-y: auto;
+  margin: 0; padding: 8px 14px; list-style: none;
+  border-top: 1px solid var(--line-soft); background: var(--surface);
+  font-size: 12px; color: var(--gray-700);
+}
+.notes li { display: flex; align-items: flex-start; gap: 6px; padding: 1px 0; }
+.notes .i { width: 13px; height: 13px; margin-top: 4px; color: var(--gray-536); }
+.notes li.error { color: var(--red-1000); }
+.notes li.error .i { color: var(--red-900); }
+
+/* ---- 窓 ---- */
+
+dialog {
+  border: 1px solid var(--line); border-radius: 12px; padding: 22px;
+  max-width: 580px; width: calc(100% - 32px);
+  box-shadow: var(--elevation-2);
+  color: var(--ink); font-family: var(--font);
+}
+dialog::backdrop { background: rgba(26, 26, 26, .4); }
+dialog h2 {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 16px; margin: 0 0 8px;
+}
+dialog h2 .i { color: var(--primary); }
+dialog p { font-size: 13px; color: var(--gray-700); margin: 0 0 12px; }
+dialog b { color: var(--ink); }
+dialog textarea, dialog input[type=text], dialog input[type=password] { width: 100%; max-width: none; }
+dialog a { color: var(--primary); }
+input[type=password] {
+  font-family: var(--font); font-size: 14px; color: var(--ink);
+  background: var(--white); border: 1px solid var(--gray-300);
+  border-radius: 6px; padding: 7px 8px; min-height: 36px;
+}
+dialog .now { font-size: 12px; color: var(--ink-sub); margin: 10px 0 0; }
+dialog .locked {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 13px; color: var(--green-1000);
+  background: var(--green-50); border: 1px solid var(--green-100);
+  border-radius: 6px; padding: 10px 12px; margin: 0;
+}
+dialog .locked .i { color: var(--green-800); margin-top: 3px; }
+dialog .locked[hidden], #keyForm[hidden] { display: none; }
+dialog menu { display: flex; justify-content: flex-end; gap: 8px; margin: 16px 0 0; padding: 0; }
+
+/* 狭いとき。**帯は折り返さない。**
+   折り返していたとき、幅 690px で帯が4段（182px）になり、その分だけ
+   マインドマップが潰れた。畳む順を決めて、1段のまま細らせる。 */
+@media (max-width: 1240px) {
+  .brand-name { display: none; }                 /* 1. 道具の名前（会議の名前があれば分かる） */
+}
+@media (max-width: 1100px) {
+  .field-name { display: none; }                 /* 2. 「音の入口」の字（選んだ名前が見えている） */
+  select, input[type=text], textarea { max-width: 170px; }
+}
+@media (max-width: 940px) {
+  main { flex-direction: column; }
+  /* 3. マインドマップを上に、書き起こしを下に。**地図のほうを大きく取る** */
+  .side { width: auto; border-left: 0; border-top: 1px solid var(--line); height: 34vh; min-height: 200px; }
+  .map { min-height: 0; }
+}
+@media (max-width: 940px) {
+  /* **帯と札を薄くして、そのぶんマインドマップに回す。**
+     実測：帯 57px・札 33px だったところを、41px・27px に */
+  .bar { padding: 3px 12px; }
+  .btn { min-height: 34px; padding: 6px 10px; font-size: 13px; }
+  .meet-check { min-height: 34px; padding: 6px 8px; }
+  select, input[type=text] { min-height: 30px; padding: 4px 6px; }
+  .chips { padding: 3px 12px; }
+  .side-head { padding: 4px 6px 4px 12px; }
+}
+@media (max-width: 880px) {
+  .meet-name { display: none; }                  /* 4. 「会議の音も」の字（印と絵で分かる） */
+  #title { font-size: 15px; min-width: 90px; }
+}
+/* 「ほかの操作」の中に移ってきたとき。並びの見た目を menu-item に合わせる */
+.field.in-menu, .check.in-menu {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 8px 10px; min-height: 44px;
+  border: 0; border-radius: 6px; font-size: 14px; color: var(--ink);
+}
+.field.in-menu:hover, .check.in-menu:hover { background: var(--surface); }
+.field.in-menu .i, .check.in-menu .i { color: var(--primary); }
+.field.in-menu .field-name, .check.in-menu .meet-name { display: inline; flex: 1; }
+.field.in-menu select { max-width: 150px; }
+.check.in-menu { justify-content: space-between; }
+
+@media (max-width: 560px) {
+  /* 6. **会議の名前は最後まで残す。**
+     ここを縮めるに任せていたら、375px で名前が幅 0 になって消えた。
+     消してよいのは、選んでいる入口の名前のほう（一度選べば変えない） */
+  .brand { min-width: 120px; }
+  select { max-width: 92px; }
+  .bar { gap: 6px; padding: 3px 8px; }
+}
+
+@media (max-width: 720px) {
+  /* 5. ボタンの字。**ここからは絵だけにする。**
+     デザインシステムは、場所の都合でやむを得ないときに限り絵だけを許し、
+     そのかわり本来の字を代替テキストにして、44px の当たり判定を取れと言っている */
+  .btn span { display: none; }
+  .btn { padding: 0; width: 38px; min-width: 38px; height: 38px; min-height: 38px; justify-content: center; position: relative; }
+  .btn::after { content: ''; position: absolute; inset: -3px; }   /* 当たり判定は 44px */
+  .btn .i { width: 20px; height: 20px; }
+  select, input[type=text] { max-width: 120px; }
+  .side-head h2 span, .check span { font-size: 11px; }
+}

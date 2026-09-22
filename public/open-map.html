@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>drawio で開く</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<!--
+  いまのマインドマップを、ふつうの drawio で開くだけの踏み台。
+
+  **本体から直に開けない理由がひとつある。**
+  マインドマップを取りに行ってから window.open を呼ぶと、押した指との縁が切れて
+  ブラウザに止められる（実測で null が返った）。押した瞬間にこの頁を開き、
+  マインドマップを取りに行くのはこちらでやる。
+-->
+<p id="msg" class="wait" style="position:static;padding:40px">マインドマップを読み込んでいます</p>
+<script>
+(async () => {
+  try {
+    const xml = await (await fetch('/api/map.xml')).text();
+    location.replace('/drawio/index.html?offline=1&lang=ja&splash=0&ui=min&dark=0#R' + encodeURIComponent(xml));
+  } catch (e) {
+    document.getElementById('msg').textContent = `マインドマップを読み込めませんでした：${e.message}`;
+  }
+})();
+</script>
+</body>
+</html>

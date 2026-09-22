@@ -1,0 +1,10 @@
+# 取ってくるもの。大きいので入れない（tools/setup.mjs が用意します）
+vendor/
+
+# 鍵。**絶対に入れない**
+.env
+
+# 途中のもの
+work/
+*.log
+.DS_Store
