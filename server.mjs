@@ -84,6 +84,7 @@ function status() {
     lan: LAN,
     title: kaigi.title,
     utterances: kaigi.transcript().length,
+    edits: { hand: kaigi.log.filter((l) => l.edited).length, learned: kaigi.corrections.size },
     notes: notes.slice(-12),
   };
 }
@@ -272,6 +273,39 @@ const server = http.createServer(async (req, res) => {
     const lines = String(b.text || '').split('\n').map((s) => s.trim()).filter(Boolean);
     for (const line of lines) await kaigi.add(line, { at: Date.now() });
     return json(res, 200, { ok: true, added: lines.length });
+  }
+
+  // 手で直す。**直した語は、これから来る発言にも当てる**
+  //
+  // 出口で直すだけでは足りない。「3小間」が「3個まで」のように、音がそのまま
+  // 重なっている誤りは、次も同じように聞こえる。**直した語を聞き取りの語彙に
+  // 足して、入口にも回す。**入口で直すほうが確実に効く（辞書と同じ考え方）
+  if (req.method === 'POST' && p === '/api/fix') {
+    const b = await body(req);
+    const id = String(b.id || '');
+    const text = String(b.text || '');
+    try {
+      const r = await kaigi.editUtterance(id, text, {
+        learn: b.learn !== false,
+        sweep: b.sweep !== false,
+      });
+      if (!r.changed) return json(res, 200, { ok: true, changed: false });
+      if (r.learned) {
+        // 直したあとの語を、聞き取りの語彙と照合の辞書に足す
+        const word = r.learned.to;
+        if (!words.includes(word)) { words = [...words, word].slice(0, 60); }
+        await kotoba.addMeetingWords([word]);
+        note('info', `直した語を覚えました：${r.learned.from} → ${r.learned.to}`
+          + (r.swept ? `（ほかに ${r.swept} 件直しました）` : ''));
+      } else {
+        note('info', '発言を直しました');
+      }
+      bump();
+      push({ type: 'status', status: status() });
+      return json(res, 200, { ok: true, ...r, words });
+    } catch (e) {
+      return json(res, 400, { error: e.message });
+    }
   }
 
   // 録ってあるものを流し込む

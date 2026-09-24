@@ -79,6 +79,25 @@ function watchTouch() {
   } catch { /* 触れないときは、追いかけたまま */ }
 }
 
+/**
+ * 見る所の幅が変わったら、引き直す。
+ *
+ * **これが無いと、マップが小さいままになる。**書き起こしを畳んだり、窓を狭めたり、
+ * スマホの幅で開いたりすると、そのときの幅に合わせて縮尺が決まる。幅が戻っても、
+ * 引き直しは「絵が大きくなったとき」にしか走らないので、縮んだままになる
+ * （実測：375px で開いたあと元に戻したら、地図が 1% の縮尺のまま白紙に見えた）。
+ */
+let refitTimer = null;
+function refit() {
+  if (!autoFit || !loadedOnce || !pendingXml || !mapReady) return;
+  clearTimeout(refitTimer);
+  refitTimer = setTimeout(() => {
+    try {
+      mapFrame.contentWindow.postMessage(JSON.stringify({ action: 'load', xml: pendingXml, autosave: 0 }), '*');
+    } catch { /* まだ出来ていないときは、次の書き換えで入る */ }
+  }, 250);
+}
+
 function sendMap(xml, extent) {
   pendingXml = xml;
   pendingExtent = extent || pendingExtent;
@@ -137,10 +156,15 @@ function refreshLog() {
 // ---- 書き起こし -------------------------------------------------------------
 
 const seen = new Map();
+// **直している最中の行は描き直さない。**
+// 書き起こしは聞き取りのたびに描き直される。守らないと、打っている途中の文が消える
+let editingId = null;
+
 function drawLog(list) {
   const ol = $('log');
   let added = false;
   for (const u of list) {
+    if (u.id === editingId) continue;
     const html = row(u);
     const have = seen.get(u.id);
     if (have && have.html === html) continue;
@@ -181,9 +205,88 @@ function row(u) {
     `<div class="fix">${icon('fix')}<s>${esc(f.from)}</s> → <b>${esc(f.to)}</b>`
     + `<span class="by">${esc(f.by)}</span></div>`).join('');
 
-  return `<div class="t">${icon('time')}${hh}:${mm}:${ss}</div>`
+  // 手で直したことは、下の「直したところ」の行が「手入力」と示す。札を別に出すと重なる
+  return `<div class="t">${icon('time')}${hh}:${mm}:${ss}`
+    + `<button type="button" class="edit" data-id="${u.id}">${icon('pen')}<span>直す</span></button></div>`
     + `<div class="text">${esc(u.text)}</div>`
     + fixes + tags;
+}
+
+// ---- 手で直す ---------------------------------------------------------------
+//
+// 聞き取りと辞書と Jev を通しても残る誤りがある。同じ音のまま別の語になっている
+// もの（「3小間」が「3個まで」）は、出口では直しようがない。人が直せるようにする。
+// 直した結果は、要約と印と、これから来る発言まで通す。
+
+$('log').addEventListener('click', (e) => {
+  const b = e.target.closest('.edit');
+  if (b) return openEditor(b.dataset.id);
+});
+
+function openEditor(id) {
+  if (editingId && editingId !== id) closeEditor();
+  const have = seen.get(id);
+  if (!have) return;
+  editingId = id;
+  const text = have.el.querySelector('.text')?.textContent || '';
+  const box = document.createElement('div');
+  box.className = 'editor';
+  box.innerHTML = `
+    <label class="sr" for="fixText">直した文</label>
+    <textarea id="fixText" rows="3" spellcheck="false"></textarea>
+    <div class="opts">
+      <label class="check"><input type="checkbox" id="fixLearn" checked>
+        ${icon('dict')}<span>直した語を覚える</span></label>
+      <label class="check"><input type="checkbox" id="fixSweep" checked>
+        ${icon('fix')}<span>同じ誤りも直す</span></label>
+    </div>
+    <div class="row">
+      <button type="button" class="btn btn-filled" id="fixSave">${icon('check')}<span>直す</span></button>
+      <button type="button" class="btn btn-outline" id="fixCancel">${icon('close')}<span>やめる</span></button>
+      <span class="hint">Enter で直す・Shift+Enter で改行・Esc でやめる</span>
+    </div>`;
+  have.el.querySelector('.text').replaceWith(box);
+  const ta = box.querySelector('#fixText');
+  ta.value = text;
+  ta.focus();
+  ta.setSelectionRange(text.length, text.length);
+  ta.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { e.preventDefault(); closeEditor(); }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEditor(); }
+  });
+  box.querySelector('#fixSave').addEventListener('click', saveEditor);
+  box.querySelector('#fixCancel').addEventListener('click', closeEditor);
+}
+
+async function saveEditor() {
+  const id = editingId;
+  const box = seen.get(id)?.el.querySelector('.editor');
+  if (!box) return closeEditor();
+  const text = box.querySelector('#fixText').value.trim();
+  const learn = box.querySelector('#fixLearn').checked;
+  const sweep = box.querySelector('#fixSweep').checked;
+  box.querySelector('#fixSave').disabled = true;
+  const r = await post('/api/fix', { id, text, learn, sweep }).catch((e) => ({ error: e.message }));
+  if (r.error) {
+    box.querySelector('#fixSave').disabled = false;
+    let bad = box.querySelector('.bad');
+    if (!bad) { bad = document.createElement('p'); bad.className = 'bad'; box.appendChild(bad); }
+    bad.textContent = r.error;
+    return;
+  }
+  closeEditor();
+}
+
+/** 編集をやめて、その行をふつうの表示に戻す */
+function closeEditor() {
+  const id = editingId;
+  editingId = null;
+  if (!id) return;
+  // **行そのものは消さない。**消して入れ直すと、その行だけ末尾へ動いて
+  // 書き起こしの順番が崩れる。控えだけ捨てれば、次の描き直しで中身が入れ替わる
+  const have = seen.get(id);
+  if (have) have.html = '';
+  fetch('/api/state').then((r) => r.json()).then((s) => drawLog(s.transcript)).catch(() => {});
 }
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -286,7 +389,7 @@ function relayout() {
   if (!now) controls.insertBefore($('meetCheck'), $('listen'));
   void menuBtn;
 }
-window.addEventListener('resize', relayout);
+window.addEventListener('resize', () => { relayout(); refit(); });
 relayout();
 
 // ---- 操作 -------------------------------------------------------------------
@@ -327,6 +430,7 @@ function setFold(on) {
   $('foldBtn').setAttribute('aria-label', t);
   $('foldBtn').setAttribute('aria-expanded', String(!on));
   try { localStorage.setItem('logloom.fold', on ? '1' : '0'); } catch { /* 覚えられない所でも動く */ }
+  refit();                            // 畳むとマップの幅が変わる。縮尺を合わせ直す
 }
 $('foldBtn').addEventListener('click', () => setFold(!document.body.classList.contains('folded')));
 try { setFold(localStorage.getItem('logloom.fold') === '1'); } catch { /* 既定は開いたまま */ }

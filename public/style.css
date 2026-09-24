@@ -330,6 +330,42 @@ main { flex: 1; display: flex; min-height: 0; }
 .meet-check:hover { background: var(--surface); }
 .meet-check .i { color: var(--primary); }
 
+/* 手で直す。**アイコンだけにしない。**必ず「直す」の字と並べる（DADS の決めごと）。
+   押せるものの当たり判定は 44px。行が高くならないよう、余白は見えない所へ伸ばす */
+.log .t { position: relative; }
+.log .edit {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 700; color: var(--primary);
+  background: none; border: 1px solid transparent; border-radius: 4px;
+  padding: 3px 6px; cursor: pointer; font-family: inherit;
+}
+.log .edit::before { content: ''; position: absolute; inset: -12px 0; right: -14px; left: auto; width: 68px; }
+.log .edit .i { width: 13px; height: 13px; }
+.log .edit:hover { background: var(--blue-50); border-color: var(--blue-100); }
+.log li:not(:hover) .edit { opacity: 0; }
+.log li:focus-within .edit, .log .edit:focus-visible { opacity: 1; }
+
+.editor { margin-top: 6px; display: flex; flex-direction: column; gap: 8px; }
+.editor textarea {
+  width: 100%; box-sizing: border-box; resize: vertical;
+  font: inherit; line-height: 1.6; color: var(--ink);
+  border: 1px solid var(--gray-600); border-radius: var(--radius); padding: 8px 10px;
+  background: var(--white);
+}
+.editor textarea:focus-visible { outline: 3px solid var(--yellow-300); box-shadow: 0 0 0 5px var(--black); }
+.editor .opts { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.editor .opts .check .i { width: 14px; height: 14px; color: var(--gray-536); }
+.editor .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.editor .btn { font-size: 12px; padding: 0 12px; min-height: 36px; }
+.editor .hint { font-size: 11px; color: var(--gray-536); }
+.editor .bad { margin: 0; font-size: 12px; color: var(--red-1000); }
+
+/* 読み上げにだけ渡す字 */
+.sr {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
+}
+
 .fix {
   display: inline-flex; align-items: center; gap: 5px; flex-wrap: wrap;
   font-size: 11px; color: var(--gray-700); margin-top: 4px;
