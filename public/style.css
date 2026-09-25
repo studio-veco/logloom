@@ -500,3 +500,10 @@ dialog menu { display: flex; justify-content: flex-end; gap: 8px; margin: 16px 0
   select, input[type=text] { max-width: 120px; }
   .side-head h2 span, .check span { font-size: 11px; }
 }
+
+/* 地図の終点から飛んできた発言。**色だけで示さない。**左に太い線を足して位置を示す */
+.log li.lit {
+  background: var(--yellow-50, #fffbeb);
+  box-shadow: inset 3px 0 0 var(--primary);
+  border-radius: 0 6px 6px 0;
+}

@@ -7,6 +7,7 @@
 import fs from 'node:fs';
 import http from 'node:http';
 import { execFile } from 'node:child_process';
+import crypto from 'node:crypto';
 import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
@@ -16,6 +17,7 @@ import * as jev from './lib/jev.mjs';
 import * as ai from './lib/ai.mjs';
 import * as listen from './lib/listen.mjs';
 import * as mx from './lib/mx.mjs';
+import * as share from './lib/share.mjs';
 import { Kaigi } from './lib/kaigi.mjs';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
@@ -27,6 +29,13 @@ const PORT = Number(process.argv[2] || process.env.PORT || 8570);
 const LAN = process.argv.includes('--lan') || process.env.LOGLOOM_LAN === '1';
 const HOST = LAN ? '0.0.0.0' : '127.0.0.1';
 const WHISPER_PORT = Number(process.env.LOGLOOM_WHISPER_PORT || 8571);
+
+// 配るものの置き場所。**焼いたものは全部ここに残す。**
+// Cloudflare Pages は「その時に渡したフォルダ」で丸ごと置き換わるので、
+// 前に配ったものを消さないために、ここを毎回まとめて渡す
+const SHARE_DIR = process.env.LOGLOOM_SHARE_DIR
+  || path.join(os.homedir(), '.cache', 'logloom', 'share');
+const SHARE_PROJECT = process.env.LOGLOOM_SHARE_PROJECT || 'logloom-share';
 
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8',
@@ -182,6 +191,35 @@ function stopListening() {
   push({ type: 'status', status: status() });
 }
 
+/**
+ * Cloudflare Pages へ上げる。**wrangler をそのまま呼ぶ。**
+ *
+ * 他の案件と同じやり方。初めての置き場所は、いまの wrangler だと
+ * Workers のほうへ回されて失敗するので、1回目だけ --force で作る。
+ */
+function publishShare(slug) {
+  return new Promise((resolve, reject) => {
+    const run = (args, then) => execFile('npx', ['--yes', 'wrangler@4.30.0', ...args],
+      { cwd: ROOT, timeout: 300000, maxBuffer: 8e6 }, then);
+    const deploy = () => run(['pages', 'deploy', SHARE_DIR, '--project-name', SHARE_PROJECT,
+      '--branch', 'main', '--commit-dirty', 'true'], (e, so, se) => {
+      const text = `${so || ''}${se || ''}`;
+      if (e && !/Deployment complete/i.test(text)) {
+        return reject(new Error(String(se || e.message).split('\n').slice(-4).join(' ').slice(0, 300)));
+      }
+      const m = text.match(/https:\/\/[a-z0-9-]+\.pages\.dev/i);
+      const base = m ? `https://${SHARE_PROJECT}.pages.dev` : '';
+      if (!base) return reject(new Error('上げた先の URL を読み取れませんでした'));
+      resolve(`${base}/${slug}/`);
+    });
+    // 置き場所が無ければ作る（あるときは失敗するが、そのまま上げに進む）。
+    // **--force は付けない。**付けて呼んだとき、作られないまま次へ進み、
+    // 「Project not found」で上げに失敗した（4.30.0 は付けずに作れる）
+    run(['pages', 'project', 'create', SHARE_PROJECT, '--production-branch', 'main'],
+      () => deploy());
+  });
+}
+
 // ---- HTTP -------------------------------------------------------------------
 
 function send(res, code, body, type = 'application/json; charset=utf-8', extra = {}) {
@@ -251,9 +289,55 @@ const server = http.createServer(async (req, res) => {
     return json(res, 200, { ok: true, pending: n });
   }
 
+  // 議事録。**既定は仕事で配れる形。**決定事項・やること（担当と期限の表）・
+  // 残った課題を先に置き、話の経緯は後ろに回す。?raw=1 で今までの並べ方も出す
   if (p === '/api/minutes.md') {
-    return send(res, 200, kaigi.markdown(), MIME['.txt'],
+    const raw = url.searchParams.get('raw');
+    const md = raw ? kaigi.markdown() : await kaigi.business();
+    return send(res, 200, md, MIME['.txt'],
       url.searchParams.get('dl') ? { 'Content-Disposition': `attachment; filename="${encodeURIComponent(kaigi.title)}.md"` } : {});
+  }
+
+  // 焼いたものを、上げる前に手元で見る
+  if (p.startsWith('/share/')) {
+    const rel = p.slice('/share/'.length).replace(/\.\.+/g, '');
+    const file = path.join(SHARE_DIR, rel.endsWith('/') || !rel ? `${rel}index.html` : rel);
+    if (!file.startsWith(SHARE_DIR)) return send(res, 403, 'no', 'text/plain; charset=utf-8');
+    return serveFile(res, file);
+  }
+
+  // ---- 配る ------------------------------------------------------------------
+  //
+  // **1枚の .html に焼く。**地図も議事録も書き起こしも中に入れる。
+  // 配った先にこの道具は無いので、外から読むものを1つも作らない。
+  //
+  // リンクで配るときは Cloudflare Pages に上げる。**中身は会議そのものなので、
+  // 当てられない名前の下に置く**（URL を知っている人は誰でも読める）。
+  if (req.method === 'POST' && p === '/api/share') {
+    const b = await body(req);
+    const md = await kaigi.business();
+    const page = share.html(kaigi.tree(), md, kaigi.transcript(),
+      { title: kaigi.title, at: kaigi.startedAt });
+    const slug = crypto.randomBytes(16).toString('hex');
+    const dir = path.join(SHARE_DIR, slug);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, 'index.html'), page, 'utf8');
+    fs.writeFileSync(path.join(SHARE_DIR, 'index.html'),
+      '<!doctype html><meta charset="utf-8"><title>LOGLOOM</title>'
+      + '<p style="font:15px/1.8 system-ui;padding:40px">配られた議事録は、それぞれの URL からご覧ください。</p>', 'utf8');
+    if (!b.publish) {
+      // 手元に焼くだけ。**上げる前に中身を見られるようにする**
+      note('info', `議事録を1枚に焼きました：${dir}/index.html`);
+      return json(res, 200, { ok: true, local: path.join(dir, 'index.html'), slug });
+    }
+    try {
+      const url2 = await publishShare(slug);
+      note('info', `リンクで配れるようにしました：${url2}`);
+      return json(res, 200, { ok: true, url: url2, slug, local: path.join(dir, 'index.html') });
+    } catch (e) {
+      note('error', `配れませんでした：${e.message}`);
+      return json(res, 500, { error: e.message, local: path.join(dir, 'index.html') });
+    }
   }
 
   if (req.method === 'POST' && p === '/api/start') {

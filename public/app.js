@@ -38,6 +38,23 @@ const icon = (name, cls = 'i') =>
       st.id = 'logloom-style';
       st.textContent = '.mxWindow{display:none!important}';
       d.head.appendChild(st);
+      // **図の実体を、組まれる瞬間に捕まえる。**
+      // drawio は EditorUi の実体を窓に出さないので、名前で拾えない（窓の中を探して0件）。
+      // 図を組む init を包んで、通りがかりに控えておく。これが無いと、
+      // 終点を押しても「どの箱か」が分からない
+      const w = mapFrame.contentWindow;
+      if (w.Graph && !w.__logloomHooked) {
+        w.__logloomHooked = true;
+        // **図は1つではない。**drawio は下書き用や見本用にもう1つ作る。
+        // 先に来たほうを掴んでいたとき、中身が空のまま（図形2つ）だった。全部控えて、
+        // 押されたときに中身のあるほうを選ぶ
+        w.__logloomGraphs = [];
+        const orig = w.Graph.prototype.init;
+        w.Graph.prototype.init = function hooked(...args) {
+          w.__logloomGraphs.push(this);
+          return orig.apply(this, args);
+        };
+      }
     } catch { /* 出どころが違えば触れない。そのときは窓が出たままになる */ }
   });
   mapFrame.src = mapFrame.dataset.src;
@@ -51,8 +68,63 @@ window.addEventListener('message', (e) => {
     mapReady = true;
     $('mapWait').hidden = true;
     if (pendingXml) sendMap(pendingXml, pendingExtent);
+    watchTaps();
   }
 });
+
+// ---- 地図の終点を押したら、その場面の書き起こしへ ------------------------------
+//
+// 地図は「何が話されたか」しか出せない。**誰がどう言ったのかは、書き起こしにしかない。**
+// 要点と振り分けの箱には、もとにした発言の番号を持たせてある（lib/mx.mjs の object）。
+// 押された箱からそれを読んで、右の書き起こしをその場所まで送り、印を付ける。
+//
+// drawio は同じ生まれ（/drawio/）で出しているので、中の図を直に触れる。
+// 出どころが違うと触れないので、そのときは何も起きない（地図は今までどおり動く）。
+let tapsOn = false;
+function watchTaps() {
+  if (tapsOn) return;
+  try {
+    const w = mapFrame.contentWindow;
+    const graphs = w.__logloomGraphs || [];
+    if (!graphs.length || !w.mxEvent) return;
+    for (const graph of graphs) graph.addListener(w.mxEvent.CLICK, (_s, evt) => {
+      let cell = evt.getProperty('cell');
+      while (cell) {
+        const ids = cell.value?.getAttribute?.('jump');
+        if (ids) {
+          showUtterances(ids.split(',').filter(Boolean));
+          // 押した箱を選んだままにしない（青い取っ手が出て、地図が編集中に見える）
+          try { graph.clearSelection(); } catch { /* 選べない figure でも進む */ }
+          evt.consume();
+          return;
+        }
+        cell = cell.parent;
+      }
+    });
+    tapsOn = true;
+  } catch { /* 触れない所では、地図はそのまま見るだけになる */ }
+}
+
+/** 書き起こしを、その発言まで送って印を付ける */
+function showUtterances(ids) {
+  if (!ids.length) return;
+  if (document.body.classList.contains('folded')) setFold(false);
+  for (const el of document.querySelectorAll('#log li.lit')) el.classList.remove('lit');
+  let first = null;
+  for (const id of ids) {
+    const have = seen.get(id);
+    if (!have) continue;
+    have.el.classList.add('lit');
+    if (!first) first = have.el;
+  }
+  if (!first) return;
+  first.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  // **消える印にする。**付けっぱなしだと、次に押したときどちらが今のものか分からない
+  clearTimeout(showUtterances.t);
+  showUtterances.t = setTimeout(() => {
+    for (const el of document.querySelectorAll('#log li.lit')) el.classList.remove('lit');
+  }, 6000);
+}
 
 // **枝が増えたら、全体が見えるところまで引く。**
 //
@@ -390,6 +462,18 @@ function relayout() {
   void menuBtn;
 }
 window.addEventListener('resize', () => { relayout(); refit(); });
+// **窓の大きさだけでは足りない。**ペインの幅は、窓が同じままでも変わる
+//（書き起こしを畳む・アプリの区切りを動かす・立ち上がりで幅が決まる）。
+// 幅が決まる前に合わせると、縮尺が 1% のまま白紙に見えた（実測）。地図の幅そのものを見張る
+try {
+  let lastW = 0;
+  new ResizeObserver((rs) => {
+    const w = Math.round(rs[0].contentRect.width);
+    if (!w || Math.abs(w - lastW) < 8) return;
+    lastW = w;
+    refit();
+  }).observe(mapFrame);
+} catch { /* 見張れない所では、窓の大きさの変わり目だけで合わせる */ }
 relayout();
 
 // ---- 操作 -------------------------------------------------------------------
